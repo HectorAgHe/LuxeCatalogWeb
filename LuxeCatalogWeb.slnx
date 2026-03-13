@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="LuxeCatalog.Business/LuxeCatalog.Business.csproj" />
+  <Project Path="LuxeCatalog.Data/LuxeCatalog.Data.csproj" />
+  <Project Path="LuxeCatalog.WebApi/LuxeCatalog.WebApi.csproj" />
+</Solution>
