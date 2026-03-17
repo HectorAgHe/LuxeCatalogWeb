@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LuxeCatalog.Business.DTOs
+namespace LuxeCatalog.Business.DTOs.Auth
 {
     public class LoginRequest
     {

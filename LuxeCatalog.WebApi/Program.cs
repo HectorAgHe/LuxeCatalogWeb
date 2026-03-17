@@ -1,5 +1,7 @@
 using LuxeCatalog.Data.Context;
 using Microsoft.EntityFrameworkCore;
+using LuxeCatalog.Business.Services.Implementations;
+using LuxeCatalog.Business.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,17 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+// ── Services ───────────────────────────────────────────
+#region Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ISeasonService, SeasonService>();
+builder.Services.AddScoped<ICatalogService, CatalogService>();
+builder.Services.AddScoped<IBrandService, BrandService>();
+builder.Services.AddScoped<IBannerService, BannerService>();
+#endregion
+
+
+
 
 // ── Pipeline ───────────────────────────────────────────
 var app = builder.Build();
