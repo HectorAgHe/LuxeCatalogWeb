@@ -31,6 +31,8 @@ builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<IBrandService, BrandService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<IMediaService, MediaService>();
+builder.Services.AddScoped<IUserService, UserService>();
 #endregion
 
 
