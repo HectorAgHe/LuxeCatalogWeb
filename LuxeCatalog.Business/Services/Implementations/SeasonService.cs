@@ -5,9 +5,7 @@ using LuxeCatalog.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using System.Net;
-{
-    
-}
+
 
 namespace LuxeCatalog.Business.Services.Implementations
 {
@@ -34,7 +32,7 @@ namespace LuxeCatalog.Business.Services.Implementations
         {
             var season = await _context.Seasons
                 .FirstOrDefaultAsync(s => s.IsActive);
-            return season is null ? null : MapToResponse(season)
+            return season is null ? null : MapToResponse(season);
         }
         public async Task<SeasonResponse> CreateAsync(SeasonRequest request)
         {
@@ -62,7 +60,7 @@ namespace LuxeCatalog.Business.Services.Implementations
         }
 
 
-        public async Task<bool> ActivateAync(int id)
+        public async Task<bool> ActivateAsync(int id)
         {
             // Busca la temporada a activar
             var season = await _context.Seasons

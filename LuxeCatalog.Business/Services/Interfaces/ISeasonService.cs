@@ -10,7 +10,7 @@ namespace LuxeCatalog.Business.Services.Interfaces
         Task<List<SeasonResponse>> GetAllAsync();
         Task<SeasonResponse?> GetActiveAsync();
         Task<SeasonResponse> CreateAsync(SeasonRequest request);
-        Task<bool> ActivateAync(int id);
+        Task<bool> ActivateAsync(int id);
         Task<bool> DeleteAsync(int id);
 
     }

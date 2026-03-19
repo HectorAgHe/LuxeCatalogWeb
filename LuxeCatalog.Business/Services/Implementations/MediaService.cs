@@ -14,7 +14,7 @@ namespace LuxeCatalog.Business.Services.Implementations
         private readonly ApplicationDbContext _context;
         private const int Maxitems = 4;
 
-        private MediaService(ApplicationDbContext context)
+        public MediaService(ApplicationDbContext context)
         {
             _context = context;
         }

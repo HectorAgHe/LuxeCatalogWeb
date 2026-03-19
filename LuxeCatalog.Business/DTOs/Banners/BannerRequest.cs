@@ -12,5 +12,5 @@ namespace LuxeCatalog.Business.DTOs.Banners
         public string? Cta { get; set; }
         public int SeasonId { get; set; }
     }
-    }
+    
 }
