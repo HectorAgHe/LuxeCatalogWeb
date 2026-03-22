@@ -18,7 +18,7 @@ namespace LuxeCatalog.Business.Services.Implementations
         }
 
 
-        public async Task<AuthResponse?> LoginAsyc(LoginRequest request)
+        public async Task<AuthResponse?> LoginAsync(LoginRequest request)
         {
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email && u.Active);

@@ -1,6 +1,8 @@
+using FluentValidation;
 using LuxeCatalog.Business.Services.Implementations;
 using LuxeCatalog.Business.Services.Interfaces;
 using LuxeCatalog.Business.Settings;
+using LuxeCatalog.Business.Validators;
 using LuxeCatalog.Data.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -36,6 +38,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
     options.MultipartBodyLengthLimit = 500 * 1024 * 1024;
 });
 
+// FluentValidation — registra todos los validators de Business
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+
 #region Business Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
@@ -62,5 +67,13 @@ app.UseStaticFiles();
 app.UseCors("AllowAngular");
 app.UseAuthorization();
 app.MapControllers();
+
+// ── Seed de datos ──────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+    await DbSeeder.SeedAsync(context);
+}
 
 app.Run();

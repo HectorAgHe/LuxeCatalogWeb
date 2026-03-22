@@ -78,7 +78,7 @@ namespace LuxeCatalog.Business.Services.Implementations
         //============================================================================
 
         // Banner Images
-        public async Task<List<BannerImageResponse>> GetBannersAsync()
+        public async Task<List<BannerImageResponse>> GetBannerImagesAsync()
         {
             return await _context.BannerImages
                 .OrderBy(b => b.Id)
@@ -143,7 +143,7 @@ namespace LuxeCatalog.Business.Services.Implementations
                     YoutubeId = v.YoutubeId,
                 }).ToListAsync();
         }
-        public async Task<VideoResponse> AddVideAsync(VideoRequest request)
+        public async Task<VideoResponse> AddVideoAsync(VideoRequest request)
         {
             var count = await _context.Videos.CountAsync();
             if (count >= 4)

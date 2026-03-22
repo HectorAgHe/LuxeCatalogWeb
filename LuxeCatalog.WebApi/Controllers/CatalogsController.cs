@@ -1,96 +1,86 @@
-﻿using LuxeCatalog.Business.DTOs.Catalogs;
+﻿using FluentValidation;
+using LuxeCatalog.Business.DTOs.Catalogs;
 using LuxeCatalog.Business.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LuxeCatalog.WebApi.Controllers
-{    
-    [ApiController]
-    [Route("api/[controller]")]
-    public class CatalogsController : ControllerBase
+namespace LuxeCatalog.WebApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class CatalogsController : ControllerBase
+{
+    private readonly ICatalogService _catalogService;
+    private readonly IValidator<CatalogRequest> _validator;
+
+    public CatalogsController(ICatalogService catalogService, IValidator<CatalogRequest> validator)
     {
-        private readonly ICatalogService _catalogService;
+        _catalogService = catalogService;
+        _validator = validator;
+    }
 
-        public CatalogsController(ICatalogService catalogService)
-        {
-            _catalogService = catalogService;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await _catalogService.GetAllAsync();
+        return Ok(result);
+    }
 
-        // GET api/catalogs
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var result = await _catalogService.GetAllAsync();
-            return Ok(result);
-        }
+    [HttpGet("visible")]
+    public async Task<IActionResult> GetVisible()
+    {
+        var result = await _catalogService.GetVisibleAsync();
+        return Ok(result);
+    }
 
-        // GET api/catalogs/visible
-        [HttpGet("visible")]
-        public async Task<IActionResult> GetVisible()
-        {
-            var result = await _catalogService.GetVisibleAsync();
-            return Ok(result);
-        }
+    [HttpGet("visible-cliente")]
+    public async Task<IActionResult> GetVisibleCliente()
+    {
+        var result = await _catalogService.GetVisibleClienteAsync();
+        return Ok(result);
+    }
 
-        // GET api/catalogs/visible-cliente
-        [HttpGet("visible-cliente")]
-        public async Task<IActionResult> GetVisibleCliente()
-        {
-            var result = await _catalogService.GetVisibleClienteAsync();
-            return Ok(result);
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _catalogService.GetByIdAsync(id);
+        if (result is null)
+            return NotFound(new { message = "Catálogo no encontrado." });
 
-        // GET api/catalogs/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var result = await _catalogService.GetByIdAsync(id);
+        return Ok(result);
+    }
 
-            if (result is null)
-                return NotFound(new { message = "Catálogo no encontrado." });
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CatalogRequest request)
+    {
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
-            return Ok(result);
-        }
+        var result = await _catalogService.CreateAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
 
-        // POST api/catalogs
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CatalogRequest request)
-        {
-            if (string.IsNullOrEmpty(request.Name))
-                return BadRequest(new { message = "El nombre del catálogo es requerido." });
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] CatalogRequest request)
+    {
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
-            if (request.SeasonId <= 0)
-                return BadRequest(new { message = "Debes seleccionar una temporada." });
+        var result = await _catalogService.UpdateAsync(id, request);
+        if (result is null)
+            return NotFound(new { message = "Catálogo no encontrado." });
 
-            var result = await _catalogService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-        }
+        return Ok(result);
+    }
 
-        // PUT api/catalogs/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CatalogRequest request)
-        {
-            if (string.IsNullOrEmpty(request.Name))
-                return BadRequest(new { message = "El nombre del catálogo es requerido." });
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var success = await _catalogService.DeleteAsync(id);
+        if (!success)
+            return NotFound(new { message = "Catálogo no encontrado." });
 
-            var result = await _catalogService.UpdateAsync(id, request);
-
-            if (result is null)
-                return NotFound(new { message = "Catálogo no encontrado." });
-
-            return Ok(result);
-        }
-
-        // DELETE api/catalogs/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var success = await _catalogService.DeleteAsync(id);
-
-            if (!success)
-                return NotFound(new { message = "Catálogo no encontrado." });
-
-            return Ok(new { message = "Catálogo eliminado correctamente." });
-        }
+        return Ok(new { message = "Catálogo eliminado correctamente." });
     }
 }

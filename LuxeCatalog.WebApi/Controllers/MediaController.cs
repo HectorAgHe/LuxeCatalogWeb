@@ -1,149 +1,133 @@
-﻿using LuxeCatalog.Business.DTOs.Media;
+﻿using FluentValidation;
+using LuxeCatalog.Business.DTOs.Media;
 using LuxeCatalog.Business.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LuxeCatalog.WebApi.Controllers
+namespace LuxeCatalog.WebApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class MediaController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MediaController : ControllerBase
+    private readonly IMediaService _mediaService;
+    private readonly IValidator<HeroImageRequest> _heroValidator;
+    private readonly IValidator<BannerImageRequest> _bannerImageValidator;
+    private readonly IValidator<VideoRequest> _videoValidator;
+
+    public MediaController(
+        IMediaService mediaService,
+        IValidator<HeroImageRequest> heroValidator,
+        IValidator<BannerImageRequest> bannerImageValidator,
+        IValidator<VideoRequest> videoValidator)
     {
-        private readonly IMediaService _mediaService;
+        _mediaService = mediaService;
+        _heroValidator = heroValidator;
+        _bannerImageValidator = bannerImageValidator;
+        _videoValidator = videoValidator;
+    }
 
-        public MediaController(IMediaService mediaService)
+    [HttpGet("hero")]
+    public async Task<IActionResult> GetHeroImages()
+    {
+        var result = await _mediaService.GetHeroImagesAsync();
+        return Ok(result);
+    }
+
+    [HttpPost("hero")]
+    public async Task<IActionResult> AddHeroImage([FromBody] HeroImageRequest request)
+    {
+        var validation = await _heroValidator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
+
+        try
         {
-            _mediaService = mediaService;
-        }
-
-        // ── Hero Images ────────────────────────────────────────
-
-        // GET api/media/hero
-        [HttpGet("hero")]
-        public async Task<IActionResult> GetHeroImages()
-        {
-            var result = _mediaService.GetHeroImagesAsync();
+            var result = await _mediaService.AddHeroImageAsync(request);
             return Ok(result);
         }
-
-
-
-        // POST api/media/hero
-        [HttpPost("hero")]
-        public async Task<IActionResult> AddHeroImage([FromBody] HeroImageRequest request)
+        catch (InvalidOperationException ex)
         {
-            if (string.IsNullOrEmpty(request.ImageUrl))
-                return BadRequest(new { message = "La url de la imagen es requerida" });
-
-            try
-            {
-                var result = await _mediaService.AddHeroImageAsync(request);
-                return Ok(result);
-            }
-            catch(InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message});
-            }
+            return BadRequest(new { message = ex.Message });
         }
+    }
 
+    [HttpDelete("hero/{id}")]
+    public async Task<IActionResult> DeleteHeroImage(int id)
+    {
+        var success = await _mediaService.DeleteHeroImageAsync(id);
+        if (!success)
+            return NotFound(new { message = "Imagen no encontrada." });
 
-        // DELETE api/media/hero/5
+        return Ok(new { message = "Imagen eliminada correctamente." });
+    }
 
-        [HttpDelete("hero/{id}")]
-        public async Task<IActionResult> DeleteHeroImage(int id)
+    [HttpGet("banners")]
+    public async Task<IActionResult> GetBannerImages()
+    {
+        var result = await _mediaService.GetBannerImagesAsync();
+        return Ok(result);
+    }
+
+    [HttpPost("banners")]
+    public async Task<IActionResult> AddBannerImage([FromBody] BannerImageRequest request)
+    {
+        var validation = await _bannerImageValidator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
+
+        try
         {
-            var success = await _mediaService.DeleteHeroImageAsync(id);
-            if (!success)
-                return NotFound(new { message = "Imagen no encontrada" });
-
-            return Ok(new {message = "Imagen eliminada correctamente"});
-        }
-
-        // ----Banner Images--------------------------------
-
-        // GET api/media/banners
-
-        [HttpGet("banners")]
-        public async Task<IActionResult> GetAll()
-        {
-            var result = _mediaService.GetBannersAsync();
-
+            var result = await _mediaService.AddBannerImageAsync(request);
             return Ok(result);
         }
-
-        // POST api/media/banners
-        [HttpPost("banners")]
-        public async Task<IActionResult> AddBannerImage(BannerImageRequest request)
+        catch (InvalidOperationException ex)
         {
-            if (string.IsNullOrEmpty(request.ImageUrl))
-                return BadRequest(new { message = "La URL de imagen es requerida" });
-
-            try
-            {
-                var result = await _mediaService.AddBannerImageAsync(request);
-                    return Ok(result);
-
-            }catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return BadRequest(new { message = ex.Message });
         }
+    }
 
+    [HttpDelete("banners/{id}")]
+    public async Task<IActionResult> DeleteBannerImage(int id)
+    {
+        var success = await _mediaService.DeleteBannerImageAsync(id);
+        if (!success)
+            return NotFound(new { message = "Imagen no encontrada." });
 
-        // DELETE api/media/banners/5
-        [HttpDelete("banners/{id}")]
-        public async Task<IActionResult> DeleteBannerImage(int id)
+        return Ok(new { message = "Imagen eliminada correctamente." });
+    }
+
+    [HttpGet("videos")]
+    public async Task<IActionResult> GetVideos()
+    {
+        var result = await _mediaService.GetVideosAsync();
+        return Ok(result);
+    }
+
+    [HttpPost("videos")]
+    public async Task<IActionResult> AddVideo([FromBody] VideoRequest request)
+    {
+        var validation = await _videoValidator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
+
+        try
         {
-            var success = await _mediaService.DeleteBannerImageAsync(id);
-
-            if (!success)
-            {
-                return NotFound(new { message = "Imagen no encontrada" });
-            }
-            return Ok(new { message = "Imagen eliminada exitosamente" });
-        
-        }
-
-
-        //----- Videos-------------------------------------
-
-        // GET api/media/videos
-
-        [HttpGet("videos")]
-        public async Task<IActionResult> GetVideos()
-        {
-            var result = await _mediaService.GetVideosAsync();
+            var result = await _mediaService.AddVideoAsync(request);
             return Ok(result);
         }
-
-        [HttpPost("videos")]
-        public async Task<IActionResult> AddVideo([FromBody] VideoRequest request)
+        catch (InvalidOperationException ex)
         {
-            if(string.IsNullOrEmpty(request.YoutubeId))
-                return BadRequest(new { message = "El ID de Youtube es requerido"});
-
-            try
-            {
-                var result = await _mediaService.AddVideAsync(request);
-                return Ok(result);
-            }catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { mmessage = ex.Message});
-            }
-
+            return BadRequest(new { message = ex.Message });
         }
+    }
 
+    [HttpDelete("videos/{id}")]
+    public async Task<IActionResult> DeleteVideo(int id)
+    {
+        var success = await _mediaService.DeleteVideoAsync(id);
+        if (!success)
+            return NotFound(new { message = "Video no encontrado." });
 
-        // DELETE api/media/videos/5
-        [HttpDelete("videos/{id}")]
-        public async Task<IActionResult> DeleteVideo(int id)
-        {
-            var success = await _mediaService.DeleteVideoAsync(id);
-
-            if (!success)
-                return NotFound(new { message = "Video no encontrado" });
-
-            return Ok(new { message = "Video eliminado correctamente pibe" });
-        }
+        return Ok(new { message = "Video eliminado correctamente." });
     }
 }

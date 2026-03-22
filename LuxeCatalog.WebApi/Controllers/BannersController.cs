@@ -1,85 +1,79 @@
-﻿using LuxeCatalog.Business.DTOs.Banners;
+﻿using FluentValidation;
+using LuxeCatalog.Business.DTOs.Banners;
 using LuxeCatalog.Business.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LuxeCatalog.WebApi.Controllers
+namespace LuxeCatalog.WebApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class BannersController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class BannersController : ControllerBase
+    private readonly IBannerService _bannerService;
+    private readonly IValidator<BannerRequest> _validator;
+
+    public BannersController(IBannerService bannerService, IValidator<BannerRequest> validator)
     {
-        private readonly IBannerService _bannerService;
-        public BannersController(IBannerService bannerService)
-        {
-            _bannerService = bannerService;
+        _bannerService = bannerService;
+        _validator = validator;
+    }
 
-        }
-        // Get api/banners
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var result = await _bannerService.GetAllAsync();
-            return Ok(result);
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await _bannerService.GetAllAsync();
+        return Ok(result);
+    }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var result = await _bannerService.GetByIdAsync(id);
-            if (result == null)
-            {
-                return NotFound(new { message = "Banner no encontrado." });
-            }
-            return Ok(result);
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActiveSeason()
+    {
+        var result = await _bannerService.GetActiveSeasonAsync();
+        return Ok(result);
+    }
 
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _bannerService.GetByIdAsync(id);
+        if (result is null)
+            return NotFound(new { message = "Banner no encontrado." });
 
-        // POST /api/banners
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] BannerRequest request)
-        {
-            if (string.IsNullOrEmpty(request.Title))
-                return BadRequest(new { mesaage = "El titulo del banner es requerido." });
+        return Ok(result);
+    }
 
-            if (request.SeasonId <= 0)
-                return BadRequest(new { message = "Debes seleccionar una temporada" });
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] BannerRequest request)
+    {
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
-            var result = await _bannerService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-        }
+        var result = await _bannerService.CreateAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
 
-        // PUT api/banners/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] BannerRequest request)
-        {
-            if (string.IsNullOrEmpty(request.Title))
-                return BadRequest(new { message = "El titulo del banner es requerido" });
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] BannerRequest request)
+    {
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
+        var result = await _bannerService.UpdateAsync(id, request);
+        if (result is null)
+            return NotFound(new { message = "Banner no encontrado." });
 
-            var result = await _bannerService.UpdateAsync(id, request);
+        return Ok(result);
+    }
 
-            if (result is null)
-                return NotFound(new { message = "Banner no encontrado" });
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var success = await _bannerService.DeleteAsync(id);
+        if (!success)
+            return NotFound(new { message = "Banner no encontrado." });
 
-            return Ok(result);
-        }
-
-
-        // DELETE api/banners/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id) 
-        {
-            var success = await _bannerService.DeleteAsync(id);
-
-            if (!success)
-                return NotFound(new { message = "Banner no encontrado" });
-
-            return Ok(new { message = "Banner eliminado correctamente" });
-        }
-        
-
-
-
+        return Ok(new { message = "Banner eliminado correctamente." });
     }
 }

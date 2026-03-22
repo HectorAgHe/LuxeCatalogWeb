@@ -13,13 +13,13 @@ namespace LuxeCatalog.Business.Services.Interfaces
         Task<bool> DeleteHeroImageAsync(int id);
 
         // Banner Images
-        Task<List<BannerImageResponse>> GetBannersAsync();
+        Task<List<BannerImageResponse>> GetBannerImagesAsync();
         Task<BannerImageResponse> AddBannerImageAsync(BannerImageRequest request);
         Task<bool> DeleteBannerImageAsync(int id);
 
         // Videos
         Task<List<VideoResponse>> GetVideosAsync();
-        Task<VideoResponse> AddVideAsync(VideoRequest request);
+        Task<VideoResponse> AddVideoAsync(VideoRequest request);
         Task<bool> DeleteVideoAsync(int id);
     }
 }
