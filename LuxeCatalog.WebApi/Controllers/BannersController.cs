@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using LuxeCatalog.Business.DTOs.Banners;
 using LuxeCatalog.Business.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuxeCatalog.WebApi.Controllers;
@@ -42,6 +43,8 @@ public class BannersController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] BannerRequest request)
     {
@@ -53,6 +56,8 @@ public class BannersController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] BannerRequest request)
     {
@@ -67,6 +72,9 @@ public class BannersController : ControllerBase
         return Ok(result);
     }
 
+
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

@@ -4,14 +4,29 @@ using LuxeCatalog.Business.Services.Interfaces;
 using LuxeCatalog.Business.Settings;
 using LuxeCatalog.Business.Validators;
 using LuxeCatalog.Data.Context;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Servicios ──────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// OpenAPI nativo .NET 10 + Scalar
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info.Title = "LuxeCatalog API";
+        document.Info.Version = "v1";
+        document.Info.Description = "API REST para el sistema de catálogo de calzado LuxeCatalog";
+        return Task.CompletedTask;
+    });
+});
 
 // EF Core + SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -38,6 +53,42 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
     options.MultipartBodyLengthLimit = 500 * 1024 * 1024;
 });
 
+//-----------------------------------------------------------------------
+//                        JWT
+//--------------------------------------------------------------------
+// JWT Settings
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("Jwt"));
+
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()!;
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtSettings.Key)),
+        ClockSkew = TimeSpan.Zero // sin margen de tiempo extra
+    };
+});
+
+builder.Services.AddAuthorization();
+
+//-------------------------------------------------------------------------
+// -----------------------------------------------------------------------
+
 // FluentValidation — registra todos los validators de Business
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -51,6 +102,7 @@ builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IStorageService, StorageService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 #endregion
 
 // ── Pipeline ───────────────────────────────────────────
@@ -58,13 +110,19 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "LuxeCatalog API";
+        options.Theme = ScalarTheme.Purple;
+        options.DefaultHttpClient = new(ScalarTarget.JavaScript, ScalarClient.Fetch);
+    });
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors("AllowAngular");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

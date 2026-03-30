@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using LuxeCatalog.Business.DTOs.Orders;
 using LuxeCatalog.Business.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuxeCatalog.WebApi.Controllers;
@@ -23,6 +24,8 @@ public class OrdersController : ControllerBase
         _statusValidator = statusValidator;
     }
 
+    // Solo Admin — ve todos los pedidos
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -30,6 +33,8 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin — filtra pedidos por estado
+    [Authorize(Roles = "Admin")]
     [HttpGet("by-status")]
     public async Task<IActionResult> GetByStatus([FromQuery] string status)
     {
@@ -37,6 +42,8 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
+    // Cliente — ve sus propios pedidos
+    [Authorize]
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetByUser(int userId)
     {
@@ -44,6 +51,8 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
+    // Cliente y Admin — detalle de un pedido
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -54,6 +63,8 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
+    // Cliente — crea un pedido
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] OrderRequest request)
     {
@@ -65,6 +76,8 @@ public class OrdersController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    // Solo Admin — cambia el estado del pedido
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusRequest request)
     {

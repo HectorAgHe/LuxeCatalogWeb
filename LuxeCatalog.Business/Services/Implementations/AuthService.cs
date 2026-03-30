@@ -12,9 +12,12 @@ namespace LuxeCatalog.Business.Services.Implementations
     {
         //Inyeccion de dependencia
         private readonly ApplicationDbContext _context;
-        public AuthService(ApplicationDbContext context)
+
+        private readonly ITokenService _tokenService;
+        public AuthService(ApplicationDbContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
 
@@ -29,7 +32,9 @@ namespace LuxeCatalog.Business.Services.Implementations
             bool validPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!validPassword) return null;
 
-            return MapToResponse(user);
+            var response = MapToResponse(user);
+            response.Token = _tokenService.GenerateToken(user);
+            return response;
         }
         public async Task<AuthResponse?> GetByIdAsync(int id)
         {

@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using LuxeCatalog.Business.DTOs.Media;
 using LuxeCatalog.Business.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuxeCatalog.WebApi.Controllers;
@@ -33,6 +34,8 @@ public class MediaController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpPost("hero")]
     public async Task<IActionResult> AddHeroImage([FromBody] HeroImageRequest request)
     {
@@ -51,6 +54,8 @@ public class MediaController : ControllerBase
         }
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpDelete("hero/{id}")]
     public async Task<IActionResult> DeleteHeroImage(int id)
     {
@@ -68,6 +73,9 @@ public class MediaController : ControllerBase
         return Ok(result);
     }
 
+
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpPost("banners")]
     public async Task<IActionResult> AddBannerImage([FromBody] BannerImageRequest request)
     {
@@ -86,6 +94,8 @@ public class MediaController : ControllerBase
         }
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpDelete("banners/{id}")]
     public async Task<IActionResult> DeleteBannerImage(int id)
     {
@@ -103,6 +113,8 @@ public class MediaController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpPost("videos")]
     public async Task<IActionResult> AddVideo([FromBody] VideoRequest request)
     {
@@ -121,6 +133,8 @@ public class MediaController : ControllerBase
         }
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpDelete("videos/{id}")]
     public async Task<IActionResult> DeleteVideo(int id)
     {

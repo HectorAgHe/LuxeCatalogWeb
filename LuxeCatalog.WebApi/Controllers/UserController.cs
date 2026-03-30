@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using LuxeCatalog.Business.DTOs.Users;
 using LuxeCatalog.Business.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuxeCatalog.WebApi.Controllers;
@@ -26,6 +27,8 @@ public class UsersController : ControllerBase
         _addressValidator = addressValidator;
     }
 
+    // Solo Admin — lista todos los usuarios
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -33,6 +36,8 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin — busca usuario por ID
+    [Authorize(Roles = "Admin")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -43,6 +48,8 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin — crea usuario
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] UserRequest request)
     {
@@ -54,6 +61,8 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    // Solo Admin — edita usuario completo
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UserRequest request)
     {
@@ -68,6 +77,8 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    // Cliente — edita su propio perfil
+    [Authorize]
     [HttpPut("{id}/profile")]
     public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateProfileRequest request)
     {
@@ -82,6 +93,8 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin — elimina usuario
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -92,6 +105,8 @@ public class UsersController : ControllerBase
         return Ok(new { message = "Usuario eliminado correctamente." });
     }
 
+    // Cliente — obtiene sus direcciones
+    [Authorize]
     [HttpGet("{userId}/addresses")]
     public async Task<IActionResult> GetAddresses(int userId)
     {
@@ -99,6 +114,8 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    // Cliente — agrega dirección
+    [Authorize]
     [HttpPost("{userId}/addresses")]
     public async Task<IActionResult> AddAddress(int userId, [FromBody] AddressRequest request)
     {
@@ -110,6 +127,8 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    // Cliente — edita dirección
+    [Authorize]
     [HttpPut("{userId}/addresses/{addressId}")]
     public async Task<IActionResult> UpdateAddress(int userId, int addressId, [FromBody] AddressRequest request)
     {
@@ -124,6 +143,8 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    // Cliente — elimina dirección
+    [Authorize]
     [HttpDelete("{userId}/addresses/{addressId}")]
     public async Task<IActionResult> DeleteAddress(int userId, int addressId)
     {

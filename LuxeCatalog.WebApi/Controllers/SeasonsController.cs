@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using LuxeCatalog.Business.DTOs.Seasons;
 using LuxeCatalog.Business.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LuxeCatalog.WebApi.Controllers;
@@ -35,6 +36,8 @@ public class SeasonsController : ControllerBase
         return Ok(result);
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] SeasonRequest request)
     {
@@ -46,6 +49,8 @@ public class SeasonsController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/activate")]
     public async Task<IActionResult> Activate(int id)
     {
@@ -56,6 +61,8 @@ public class SeasonsController : ControllerBase
         return Ok(new { message = "Temporada activada correctamente." });
     }
 
+    // Solo Admin
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
