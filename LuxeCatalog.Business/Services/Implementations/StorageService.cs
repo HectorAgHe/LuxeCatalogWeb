@@ -73,4 +73,28 @@ public class StorageService : IStorageService
             return false;
         }
     }
+
+
+    public Task<(string UploadUrl, string FileUrl)> GetPresignedUrlAsync(
+    string fileName, string contentType, string folder)
+    {
+        // Genera key única: "catalogos/catalogos_20260413_a3f9b2c1.pdf"
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        var uniqueName = $"{folder}_{DateTime.UtcNow:yyyyMMdd}_{Guid.NewGuid().ToString()[..8]}{extension}";
+        var key = $"{folder}/{uniqueName}";
+
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _settings.BucketName,
+            Key = key,
+            Verb = HttpVerb.PUT,
+            //ContentType = contentType,
+            Expires = DateTime.UtcNow.AddMinutes(15)
+        };
+
+        var uploadUrl = _s3Client.GetPreSignedURL(request);
+        var fileUrl = $"{_settings.PublicUrl}/{key}";
+
+        return Task.FromResult((uploadUrl, fileUrl));
+    }
 }

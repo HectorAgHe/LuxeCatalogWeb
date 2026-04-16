@@ -39,6 +39,13 @@ namespace LuxeCatalog.Business.Services.Implementations
 
         public async Task<UserResponse> CreateAsync(UserRequest request)
         {
+            // Verificar si el email ya existe
+             bool emailExists = await _context.Users
+                .AnyAsync(u => u.Email == request.Email);
+
+             if (emailExists)
+              throw new InvalidOperationException("El correo electrónico ya está registrado.");
+
             var user = new User
             {
                 FirstName = request.FirstName,
@@ -64,8 +71,60 @@ namespace LuxeCatalog.Business.Services.Implementations
             return MapToResponse(user);
         }
 
+        public async Task<UserResponse> CreateAdminAsync(UserRequest request)
+        {
+            // Verificar email duplicado
+            bool emailExists = await _context.Users
+                .AnyAsync(u => u.Email == request.Email);
+
+            if (emailExists)
+                throw new InvalidOperationException("El correo electrónico ya está registrado.");
+
+            var user = new User
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(
+                    string.IsNullOrEmpty(request.Password) ? "Luxe1234!" : request.Password
+                ),
+                Phone1 = request.Phone1,
+                Phone2 = request.Phone2,
+                CardNumber = request.CardNumber,
+                ClvSocio = request.ClvSocio,
+                Active = request.Active,
+                PendingOrder = false,
+                Avatar = request.Avatar,
+                Description = request.Description,
+                Role = UserRole.Admin  // ← diferencia clave
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return MapToResponse(user);
+        }
+
+        public async Task<bool> ResetPasswordAsync(int id, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user is null) return false;
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<UserResponse?> UpdateAsync(int id, UserRequest request)
         {
+            // En UpdateAsync — verificar email duplicado excluyendo el propio usuario
+            bool emailExists = await _context.Users
+                .AnyAsync(u => u.Email == request.Email && u.Id != id);
+
+            if (emailExists)
+                throw new InvalidOperationException("El correo electrónico ya está registrado.");
+
             var user = await _context.Users.FindAsync(id);
             if (user is null) return null;
 

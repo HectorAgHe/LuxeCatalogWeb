@@ -26,6 +26,18 @@ public class UserRequestValidator : AbstractValidator<UserRequest>
     }
 }
 
+
+public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
+{
+    public ResetPasswordRequestValidator()
+    {
+        RuleFor(x => x.NewPassword)
+            .NotEmpty().WithMessage("La nueva contraseña es requerida.")
+            .MinimumLength(8).WithMessage("La contraseña debe tener al menos 8 caracteres.");
+    }
+}
+
+
 public class UpdateProfileRequestValidator : AbstractValidator<UpdateProfileRequest>
 {
     public UpdateProfileRequestValidator()

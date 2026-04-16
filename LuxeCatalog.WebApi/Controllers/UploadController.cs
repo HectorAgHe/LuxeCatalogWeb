@@ -1,4 +1,5 @@
-﻿using LuxeCatalog.Business.Services.Interfaces;
+﻿using LuxeCatalog.Business.DTOs.Media;
+using LuxeCatalog.Business.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -107,5 +108,30 @@ public class UploadController : ControllerBase
             size = file.Length,
             extension
         });
+    }
+
+
+
+    // POST api/upload/presign
+    // Genera URL firmada para subida directa desde Angular a R2
+    [Authorize]
+    [HttpPost("presign")]
+    public async Task<IActionResult> GetPresignedUrl([FromBody] PresignRequest request)
+    {
+        if (string.IsNullOrEmpty(request.FileName))
+            return BadRequest(new { message = "El nombre del archivo es requerido." });
+
+        if (string.IsNullOrEmpty(request.ContentType))
+            return BadRequest(new { message = "El tipo de contenido es requerido." });
+
+        // Validar carpeta permitida
+        var allowedFolders = new[] { "catalogos", "marcas", "hero", "banners", "avatars" };
+        if (!allowedFolders.Contains(request.Folder))
+            return BadRequest(new { message = "Carpeta no permitida." });
+
+        var (uploadUrl, fileUrl) = await _storageService.GetPresignedUrlAsync(
+            request.FileName, request.ContentType, request.Folder);
+
+        return Ok(new { uploadUrl, fileUrl });
     }
 }

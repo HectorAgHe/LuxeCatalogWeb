@@ -8,5 +8,6 @@ namespace LuxeCatalog.Business.Services.Interfaces
     {
         Task<string> UploadAsync(Stream fileStream, string fileName, string contentType, string folder);
         Task<bool> DeleteAsync(string fileUrl);
+        Task<(string UploadUrl, string FileUrl)> GetPresignedUrlAsync(string fileName, string contentType, string folder);
     }
 }

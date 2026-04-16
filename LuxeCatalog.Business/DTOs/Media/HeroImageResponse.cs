@@ -7,7 +7,7 @@ namespace LuxeCatalog.Business.DTOs.Media
     public class HeroImageResponse
     {
         public int Id { get; set; }
-        public string Title = string.Empty;
-        public string ImageUrl = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
     }
 }

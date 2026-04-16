@@ -14,17 +14,20 @@ public class UsersController : ControllerBase
     private readonly IValidator<UserRequest> _userValidator;
     private readonly IValidator<UpdateProfileRequest> _profileValidator;
     private readonly IValidator<AddressRequest> _addressValidator;
+    private readonly IValidator<ResetPasswordRequest> _resetPasswordValidator;
 
     public UsersController(
         IUserService userService,
         IValidator<UserRequest> userValidator,
         IValidator<UpdateProfileRequest> profileValidator,
-        IValidator<AddressRequest> addressValidator)
+        IValidator<AddressRequest> addressValidator,
+        IValidator<ResetPasswordRequest> resetPassworValidator)
     {
         _userService = userService;
         _userValidator = userValidator;
         _profileValidator = profileValidator;
         _addressValidator = addressValidator;
+        _resetPasswordValidator = resetPassworValidator;
     }
 
     // Solo Admin — lista todos los usuarios
@@ -49,16 +52,65 @@ public class UsersController : ControllerBase
     }
 
     // Solo Admin — crea usuario
-    [Authorize(Roles = "Admin")]
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] UserRequest request)
     {
         var validation = await _userValidator.ValidateAsync(request);
         if (!validation.IsValid)
             return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
-        var result = await _userService.CreateAsync(request);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        try
+        {
+            var result = await _userService.CreateAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+
+
+
+
+    // Solo Admin — crea otro administrador
+    [HttpPost("create-admin")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CreateAdmin([FromBody] UserRequest request)
+    {
+        var validation = await _userValidator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
+
+        try
+        {
+            var result = await _userService.CreateAdminAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+
+
+    // Solo Admin — resetea contraseña de un usuario
+    [HttpPut("{id}/reset-password")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ResetPassword(int id, [FromBody] ResetPasswordRequest request)
+    {
+        var validation = await _resetPasswordValidator.ValidateAsync(request);
+        if (!validation.IsValid)
+            return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
+
+        var success = await _userService.ResetPasswordAsync(id, request.NewPassword);
+        if (!success)
+            return NotFound(new { message = "Usuario no encontrado." });
+
+        return Ok(new { message = "Contraseña actualizada correctamente." });
     }
 
     // Solo Admin — edita usuario completo
@@ -70,11 +122,18 @@ public class UsersController : ControllerBase
         if (!validation.IsValid)
             return BadRequest(validation.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
-        var result = await _userService.UpdateAsync(id, request);
-        if (result is null)
-            return NotFound(new { message = "Usuario no encontrado." });
+        try
+        {
+            var result = await _userService.UpdateAsync(id, request);
+            if (result is null)
+                return NotFound(new { message = "Usuario no encontrado." });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     // Cliente — edita su propio perfil

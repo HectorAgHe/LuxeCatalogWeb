@@ -11,8 +11,10 @@ namespace LuxeCatalog.Business.Services.Interfaces
         Task<List<UserResponse>> GetAllAsync();
         Task<UserResponse?> GetByIdAsync(int id);
         Task<UserResponse> CreateAsync(UserRequest request);
+        Task<UserResponse> CreateAdminAsync(UserRequest request);
         Task<UserResponse?> UpdateAsync(int id, UserRequest request);
         Task<bool> DeleteAsync(int id);
+        Task<bool> ResetPasswordAsync(int id, string newPassword);
 
         // User
 
